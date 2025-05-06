@@ -38,30 +38,29 @@ def handle_input():
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, ord(cmd.upper()), 0)
  
     if cmd == "up":
-        win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x28, 0)
-        
+        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x25, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x27, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x28, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x26, 0)
+    
+    if cmd == "down":
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x25, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x27, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x26, 0)
-    if cmd == "down":
-        win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x26, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x28, 0)
         
-        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x25, 0)
-        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x27, 0)
-        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x28, 0)
     if cmd == "left":
-        win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x26, 0)
-        
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x28, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x27, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x26, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x25, 0)
+   
+   if cmd == "right":
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x25, 0)
-    if cmd == "right":
-        win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x26, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x26, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x28, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x27, 0)
 
-        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x28, 0)
-        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x25, 0)
-        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x27, 0)
-        
     elif cmd == "b":
         press_key(0x45)
 

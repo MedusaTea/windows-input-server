@@ -13,7 +13,7 @@ else:
 
 app = Flask(__name__)
 
-def press_key(hexKeyCode, delay=0.05):
+def press_key(hexKeyCode, delay=0.1):
     win32api.keybd_event(hexKeyCode, 0,0,0)
     time.sleep(delay)
     win32api.keybd_event(hexKeyCode,0, win32con.KEYEVENTF_KEYUP,0)
@@ -34,40 +34,47 @@ def handle_input():
 
     if cmd == "a" or cmd == "s" or cmd == "w" or cmd == "d": 
         win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, ord(cmd.upper()), 0)
-        time.sleep(0.05)
+        time.sleep(0.1)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, ord(cmd.upper()), 0)
- 
     if cmd == "up":
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x25, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x27, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x28, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x26, 0)
-    
     if cmd == "down":
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x25, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x27, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x26, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x28, 0)
-        
     if cmd == "left":
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x28, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x27, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x26, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x25, 0)
-   
-   if cmd == "right":
+    if cmd == "right":
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x25, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x26, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x28, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, 0x27, 0)
+    if cmd == "hold":
+        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x25, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x26, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x27, 0)
+        win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x28, 0)
 
-    elif cmd == "b":
+    elif cmd == "e":
         press_key(0x45)
+    
+    elif cmd == "f":
+        press_key(0x46)
 
     elif cmd == "q":
         press_key(0x51)
+    
+    elif cmd == "r":
+        press_key(0x52)
 
-    elif cmd == "i":
+    elif cmd == "space":
         press_key(win32con.VK_SPACE)
 
     elif cmd == "ctrl":

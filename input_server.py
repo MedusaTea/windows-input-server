@@ -3,110 +3,96 @@ import ctypes
 import time
 import win32gui
 import win32con
+import pynput._util.win32
 
 app = Flask(__name__)
 
-# Try to find the window by title
+# --- Find game window ---
 hwnd = win32gui.FindWindow(None, "RogueBlightDemo")
-shiftDown = False
-
 if hwnd:
-    print("Window found")
+    print("✅ Window found!")
 else:
-    print("Window not found!")
+    print("❌ Window not found.")
 
-# C struct setup for SendInput
-PUL = ctypes.POINTER(ctypes.c_ulong)
+# --- DirectInput Scancodes ---
+W = 0x11
+A = 0x1E
+S = 0x1F
+D = 0x20
+SPACE = 0x39
+ENTER = 0x1C
+ESC = 0x01
+LEFT_SHIFT = 0x2A
+LEFT_CTRL = 0x1D
+E = 0x12
+F = 0x21
+Q = 0x10
+R = 0x13
+UP_ARROW = 0xC8
+DOWN_ARROW = 0xD0
+LEFT_ARROW = 0xCB
+RIGHT_ARROW = 0xCD
 
-class KEYBDINPUT(ctypes.Structure):
-    _fields_ = [
-        ("wVk", ctypes.c_ushort),
-        ("wScan", ctypes.c_ushort),
-        ("dwFlags", ctypes.c_ulong),
-        ("time", ctypes.c_ulong),
-        ("dwExtraInfo", PUL)
-    ]
-
-class INPUT(ctypes.Structure):
-    class _INPUT_UNION(ctypes.Union):
-        _fields_ = [("ki", KEYBDINPUT)]
-    _anonymous_ = ("u",)
-    _fields_ = [("type", ctypes.c_ulong), ("u", _INPUT_UNION)]
-
-INPUT_KEYBOARD = 1
-KEYEVENTF_KEYUP = 0x0002
-KEYEVENTF_SCANCODE = 0x0008
-
+# --- SendInput setup ---
 SendInput = ctypes.windll.user32.SendInput
 
-def press_key(hexKeyCode, delay=0.1):
-    scan_code = ctypes.windll.user32.MapVirtualKeyW(hexKeyCode, 0)
+def HoldKey(hexKeyCode):
+    extra = ctypes.c_ulong(0)
+    ii_ = pynput._util.win32.INPUT_union()
+    ii_.ki = pynput._util.win32.KEYBDINPUT(0, hexKeyCode, 0x0008, 0, ctypes.cast(ctypes.pointer(extra), ctypes.c_void_p))
+    x = pynput._util.win32.INPUT(ctypes.c_ulong(1), ii_)
+    SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
-    # Key down
-    ki_down = KEYBDINPUT(wVk=0, wScan=scan_code, dwFlags=KEYEVENTF_SCANCODE, time=0, dwExtraInfo=None)
-    input_down = INPUT(type=INPUT_KEYBOARD, ki=ki_down)
+def ReleaseKey(hexKeyCode):
+    extra = ctypes.c_ulong(0)
+    ii_ = pynput._util.win32.INPUT_union()
+    ii_.ki = pynput._util.win32.KEYBDINPUT(0, hexKeyCode, 0x0008 | 0x0002, 0, ctypes.cast(ctypes.pointer(extra), ctypes.c_void_p))
+    x = pynput._util.win32.INPUT(ctypes.c_ulong(1), ii_)
+    SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
-    # Key up
-    ki_up = KEYBDINPUT(wVk=0, wScan=scan_code, dwFlags=KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP, time=0, dwExtraInfo=None)
-    input_up = INPUT(type=INPUT_KEYBOARD, ki=ki_up)
+def HoldAndReleaseKey(hexKeyCode, seconds=0.1):
+    HoldKey(hexKeyCode)
+    time.sleep(seconds)
+    ReleaseKey(hexKeyCode)
 
-    SendInput(1, ctypes.byref(input_down), ctypes.sizeof(INPUT))
-    time.sleep(delay)
-    SendInput(1, ctypes.byref(input_up), ctypes.sizeof(INPUT))
-
-def key_down(hexKeyCode):
-    scan_code = ctypes.windll.user32.MapVirtualKeyW(hexKeyCode, 0)
-    ki = KEYBDINPUT(wVk=0, wScan=scan_code, dwFlags=KEYEVENTF_SCANCODE, time=0, dwExtraInfo=None)
-    input = INPUT(type=INPUT_KEYBOARD, ki=ki)
-    SendInput(1, ctypes.byref(input), ctypes.sizeof(INPUT))
-
-def key_up(hexKeyCode):
-    scan_code = ctypes.windll.user32.MapVirtualKeyW(hexKeyCode, 0)
-    ki = KEYBDINPUT(wVk=0, wScan=scan_code, dwFlags=KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP, time=0, dwExtraInfo=None)
-    input = INPUT(type=INPUT_KEYBOARD, ki=ki)
-    SendInput(1, ctypes.byref(input), ctypes.sizeof(INPUT))
-
+# --- Input route ---
 @app.route('/input', methods=['POST'])
 def handle_input():
-    global shiftDown
     data = request.json
     cmd = data.get('command')
-    print("Command: " + cmd)
+    print(f"🔹 Command received: {cmd}")
 
-    # Ensure the window is in focus
+    # Focus the window
     if hwnd:
         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
         win32gui.SetForegroundWindow(hwnd)
 
-    if cmd == "enter":
-        press_key(0x0D)
+    key_map = {
+        'w': W,
+        'a': A,
+        's': S,
+        'd': D,
+        'e': E,
+        'f': F,
+        'q': Q,
+        'r': R,
+        'space': SPACE,
+        'enter': ENTER,
+        'esc': ESC,
+        'ctrl': LEFT_CTRL,
+        'shift': LEFT_SHIFT,
+        'up': UP_ARROW,
+        'down': DOWN_ARROW,
+        'left': LEFT_ARROW,
+        'right': RIGHT_ARROW
+    }
 
-    elif cmd == "space":
-        press_key(0x20)
+    key = key_map.get(cmd.lower())
+    if key is not None:
+        HoldAndReleaseKey(key)
+        return {"status": f"Sent {cmd}"}
 
-    elif cmd == "ctrl":
-        key_down(0x11)
-        time.sleep(1)
-        key_up(0x11)
-
-    elif cmd == "toggleshiftdown":
-        if shiftDown:
-            key_up(0x10)  # Shift up
-            shiftDown = False
-        else:
-            key_down(0x10)  # Shift down
-            shiftDown = True
-
-    elif cmd in ["up", "down", "left", "right"]:
-        arrows = {"up": 0x26, "down": 0x28, "left": 0x25, "right": 0x27}
-        key = arrows[cmd]
-        press_key(key)
-
-    elif len(cmd) == 1:  # Single character
-        vk = ord(cmd)
-        press_key(vk)
-
-    return {"status": "ok"}
+    return {"status": "Unknown command"}, 400
 
 if __name__ == '__main__':
     app.run(port=8084)

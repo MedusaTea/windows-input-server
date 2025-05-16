@@ -1,11 +1,23 @@
 from flask import Flask, request
 import ctypes
 import time
+import win32gui
+import win32con
 
-# Constants
+app = Flask(__name__)
+
+# Try to find the window by title
+hwnd = win32gui.FindWindow(None, "RogueBlightDemo")
+shiftDown = False
+
+if hwnd:
+    print("Window found")
+else:
+    print("Window not found!")
+
+# C struct setup for SendInput
 PUL = ctypes.POINTER(ctypes.c_ulong)
 
-# C struct redefinitions
 class KEYBDINPUT(ctypes.Structure):
     _fields_ = [
         ("wVk", ctypes.c_ushort),
@@ -21,22 +33,19 @@ class INPUT(ctypes.Structure):
     _anonymous_ = ("u",)
     _fields_ = [("type", ctypes.c_ulong), ("u", _INPUT_UNION)]
 
-# Constants for flags
 INPUT_KEYBOARD = 1
 KEYEVENTF_KEYUP = 0x0002
 KEYEVENTF_SCANCODE = 0x0008
 
-# ctypes setup
 SendInput = ctypes.windll.user32.SendInput
 
-# Helper functions
 def press_key(hexKeyCode, delay=0.1):
     scan_code = ctypes.windll.user32.MapVirtualKeyW(hexKeyCode, 0)
-    
+
     # Key down
     ki_down = KEYBDINPUT(wVk=0, wScan=scan_code, dwFlags=KEYEVENTF_SCANCODE, time=0, dwExtraInfo=None)
     input_down = INPUT(type=INPUT_KEYBOARD, ki=ki_down)
-    
+
     # Key up
     ki_up = KEYBDINPUT(wVk=0, wScan=scan_code, dwFlags=KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP, time=0, dwExtraInfo=None)
     input_up = INPUT(type=INPUT_KEYBOARD, ki=ki_up)
@@ -57,16 +66,17 @@ def key_up(hexKeyCode):
     input = INPUT(type=INPUT_KEYBOARD, ki=ki)
     SendInput(1, ctypes.byref(input), ctypes.sizeof(INPUT))
 
-# Flask app
-app = Flask(__name__)
-shiftDown = False
-
 @app.route('/input', methods=['POST'])
 def handle_input():
     global shiftDown
     data = request.json
     cmd = data.get('command')
     print("Command: " + cmd)
+
+    # Ensure the window is in focus
+    if hwnd:
+        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+        win32gui.SetForegroundWindow(hwnd)
 
     if cmd == "enter":
         press_key(0x0D)
@@ -93,11 +103,8 @@ def handle_input():
         press_key(key)
 
     elif len(cmd) == 1:  # Single character
-        vk = ord(cmd.upper())
+        vk = ord(cmd)
         press_key(vk)
-
-    elif cmd in ['e', 'f', 'q', 'r']:
-        press_key(ord(cmd.upper()))
 
     return {"status": "ok"}
 

@@ -43,6 +43,7 @@ M = 0x32
 # --- SendInput setup ---
 SendInput = ctypes.windll.user32.SendInput
 
+
 def HoldKey(hexKeyCode):
     extra = ctypes.c_ulong(0)
     ii_ = pynput._util.win32.INPUT_union()
@@ -73,6 +74,11 @@ def handle_input():
     if hwnd:
         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
         win32gui.SetForegroundWindow(hwnd)
+    
+    toggle = False 
+    if cmd.startswith("toggle"):
+        toggle = True
+        cmd = cmd.replace("toggle", "").strip()
 
     key_map = {
         'w': W,
@@ -103,7 +109,16 @@ def handle_input():
 
     key = key_map.get(cmd.lower())
     if key is not None:
-        HoldAndReleaseKey(key)
+        if toggle:
+            if toggle_key[cmd] == True:
+                toggle_key[cmd] = False
+                ReleaseKey(key)
+            else:
+                toggle_key[cmd] = True
+                HoldKey(key)
+        else:
+            HoldAndReleaseKey(key)
+       
         return {"status": f"Sent {cmd}"}
 
     return {"status": "Unknown command"}, 400

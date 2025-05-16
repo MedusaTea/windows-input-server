@@ -32,6 +32,13 @@ UP_ARROW = 0xC8
 DOWN_ARROW = 0xD0
 LEFT_ARROW = 0xCB
 RIGHT_ARROW = 0xCD
+J = 0x24
+L = 0x26
+X = 0x2D
+Z = 0x2C
+P = 0x19
+O = 0x18
+M = 0x32
 
 # --- SendInput setup ---
 SendInput = ctypes.windll.user32.SendInput
@@ -75,7 +82,14 @@ def handle_input():
         'e': E,
         'f': F,
         'q': Q,
+        'j': J,
+        'l': L,
         'r': R,
+        'x': X,
+        'z': Z,
+        'p': P,
+        'o': O,
+        'm': M,
         'space': SPACE,
         'enter': ENTER,
         'esc': ESC,

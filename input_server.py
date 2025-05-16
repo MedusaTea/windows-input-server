@@ -7,6 +7,8 @@ import pynput._util.win32
 
 app = Flask(__name__)
 
+toggle_key = {}
+
 # --- Find game window ---
 hwnd = win32gui.FindWindow(None, "RogueBlightDemo")
 if hwnd:

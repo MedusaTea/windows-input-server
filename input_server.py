@@ -5,7 +5,12 @@ import win32gui
 import win32con
 import win32api
 
-hwnd = win32gui.FindWindow(None, "Binding of Isaac: Rebirth")
+#hwnd = win32gui.FindWindow(None, "Binding of Isaac: Rebirth")
+#hwnd = win32gui.FindWindow(None, "Vampire Survivors")
+hwnd = win32gui.FindWindow(None, "RogueBlightDemo")
+
+shiftDown = false
+
 if hwnd:
     print("Window found")
 else:
@@ -32,7 +37,7 @@ def handle_input():
     if cmd == "enter":
         press_key(0x0D)
 
-    if cmd == "a" or cmd == "s" or cmd == "w" or cmd == "d": 
+    if len(cmd) == 1: 
         win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, ord(cmd.upper()), 0)
         time.sleep(0.1)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, ord(cmd.upper()), 0)
@@ -61,6 +66,11 @@ def handle_input():
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x26, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x27, 0)
         win32api.PostMessage(hwnd, win32con.WM_KEYUP, 0x28, 0)
+    if cmd == "toggleshiftdown":
+        if shiftDown:
+            win32api.PostMessage(hwnd, win32con.WM_KEYUP, win32con.VK_LSHIFT, 0)
+        else:
+            win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, win32con.VK_LSHIFT, 0)
 
     elif cmd == "e":
         press_key(0x45)

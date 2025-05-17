@@ -41,10 +41,39 @@ Z = 0x2C
 P = 0x19
 O = 0x18
 M = 0x32
+MOUSEEVENTF_MOVE = 0x0001
+MOUSEEVENTF_LEFTDOWN = 0x0002
+MOUSEEVENTF_LEFTUP = 0x0004
+MOUSEEVENTF_RIGHTDOWN = 0x0008
+MOUSEEVENTF_RIGHTUP = 0x0010
+MOUSEEVENTF_MIDDLEDOWN = 0x0020
+MOUSEEVENTF_MIDDLEUP = 0x0040
 
 # --- SendInput setup ---
 SendInput = ctypes.windll.user32.SendInput
 
+class MOUSEINPUT(ctypes.Structure):
+    _fields_ = [
+        ("dx", ctypes.c_long),
+        ("dy", ctypes.c_long),
+        ("mouseData", ctypes.c_ulong),
+        ("dwFlags", ctypes.c_ulong),
+        ("time", ctypes.c_ulong),
+        ("dwExtraInfo", ctypes.POINTER(ctypes.c_ulong))
+    ]
+
+class INPUT(ctypes.Structure):
+    class _INPUT_UNION(ctypes.Union):
+        _fields_ = [("mi", MOUSEINPUT)]
+    _anonymous_ = ("u",)
+    _fields_ = [
+        ("type", ctypes.c_ulong),
+        ("u", _INPUT_UNION)
+    ]
+def click_mouse(dwFlags):
+    mi = MOUSEINPUT(0, 0, 0, dwFlags, 0, None)
+    input_struct = INPUT(ctypes.c_ulong(0), mi)  # type 0 = INPUT_MOUSE
+    SendInput(1, ctypes.byref(input_struct), ctypes.sizeof(input_struct))
 
 def HoldKey(hexKeyCode):
     extra = ctypes.c_ulong(0)
@@ -76,11 +105,23 @@ def handle_input():
     if hwnd:
         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
         win32gui.SetForegroundWindow(hwnd)
-    
+
+    if cmd == "lclick":
+        click_mouse(MOUSEEVENTF_LEFTDOWN)
+        time.sleep(0.05)
+        click_mouse(MOUSEEVENTF_LEFTUP)
+        return {"status": "Left click"}
+
+    elif cmd == "rclick":
+        click_mouse(MOUSEEVENTF_RIGHTDOWN)
+        time.sleep(0.05)
+        click_mouse(MOUSEEVENTF_RIGHTUP)
+        return {"status": "Right click"}
+
     toggle = False 
-    if cmd.startswith("toggle"):
+    if cmd.startswith("hold"):
         toggle = True
-        cmd = cmd.replace("toggle", "").strip()
+        cmd = cmd.replace("hold", "").strip()
 
     key_map = {
         'w': W,
@@ -112,13 +153,14 @@ def handle_input():
     key = key_map.get(cmd.lower())
     if key is not None:
         if toggle:
-            if toggle_key[cmd] == True:
+            if toggle_key.get(cmd, False):
                 toggle_key[cmd] = False
                 ReleaseKey(key)
             else:
                 toggle_key[cmd] = True
                 HoldKey(key)
         else:
+            toggle_key[cmd] = False
             HoldAndReleaseKey(key)
        
         return {"status": f"Sent {cmd}"}

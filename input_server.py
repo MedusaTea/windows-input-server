@@ -62,17 +62,22 @@ class MOUSEINPUT(ctypes.Structure):
         ("dwExtraInfo", ctypes.POINTER(ctypes.c_ulong))
     ]
 
+class INPUT_UNION(ctypes.Union):
+    _fields_ = [("mi", MOUSEINPUT)]
+
 class INPUT(ctypes.Structure):
-    class _INPUT_UNION(ctypes.Union):
-        _fields_ = [("mi", MOUSEINPUT)]
     _anonymous_ = ("u",)
     _fields_ = [
         ("type", ctypes.c_ulong),
-        ("u", _INPUT_UNION)
+        ("u", INPUT_UNION)
     ]
+
 def click_mouse(dwFlags):
-    mi = MOUSEINPUT(0, 0, 0, dwFlags, 0, None)
-    input_struct = INPUT(ctypes.c_ulong(0), mi)  # type 0 = INPUT_MOUSE
+    extra = ctypes.c_ulong(0)
+    mouse_input = MOUSEINPUT(0, 0, 0, dwFlags, 0, ctypes.pointer(extra))
+    union = INPUT_UNION()
+    union.mi = mouse_input
+    input_struct = INPUT(type=ctypes.c_ulong(0), u=union)  # 0 = INPUT_MOUSE
     SendInput(1, ctypes.byref(input_struct), ctypes.sizeof(input_struct))
 
 def HoldKey(hexKeyCode):

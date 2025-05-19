@@ -1,3 +1,8 @@
+## ⚠️ Heads up
+This is a personal project that may be updated as needed
+
+It should be used as a starting point and reference, not expected to handle every use case.
+
 ## Summary
 A simple Flask-based API that simulates keyboard and mouse inputs to control a Windows game window remotely.
 
